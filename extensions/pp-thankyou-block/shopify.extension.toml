@@ -15,3 +15,40 @@ target = "purchase.thank-you.block.render"
 [extensions.capabilities]
 # fetch() to the app backend (subscriber status, Attentive signup, click tracking)
 network_access = true
+
+# Editable per placement in the checkout editor. Empty social URLs hide that
+# button; without the SMS disclosure the SMS signup isn't shown at all.
+[extensions.settings]
+
+[[extensions.settings.fields]]
+key = "instagram_url"
+type = "single_line_text_field"
+name = "Instagram URL"
+description = "Shown to customers already subscribed to email and SMS. UTMs are added automatically."
+  [[extensions.settings.fields.validations]]
+  name = "regex"
+  value = "^https://.+"
+
+[[extensions.settings.fields]]
+key = "tiktok_url"
+type = "single_line_text_field"
+name = "TikTok URL"
+description = "Optional."
+  [[extensions.settings.fields.validations]]
+  name = "regex"
+  value = "^https://.+"
+
+[[extensions.settings.fields]]
+key = "facebook_url"
+type = "single_line_text_field"
+name = "Facebook URL"
+description = "Optional."
+  [[extensions.settings.fields.validations]]
+  name = "regex"
+  value = "^https://.+"
+
+[[extensions.settings.fields]]
+key = "sms_disclosure"
+type = "multi_line_text_field"
+name = "SMS consent disclosure"
+description = "Required legal text from Attentive. The SMS signup only shows when this is set."

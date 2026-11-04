@@ -1,9 +1,29 @@
 {
-  "heading": "Stay in the loop",
-  "subheading": {
-    "none": "Get exclusive offers and new drops by email and text.",
-    "email_only": "Get text alerts for new drops and offers.",
-    "sms_only": "Get our emails for new drops and offers.",
-    "both": "Follow us for new drops and behind-the-scenes."
+  "signup": {
+    "heading": "Stay in the loop",
+    "subheading": {
+      "none": "Get exclusive offers and new drops by email and text.",
+      "email_only": "Get text alerts for new drops and offers.",
+      "sms_only": "Get our emails for new drops and offers."
+    },
+    "emailLabel": "Email",
+    "phoneLabel": "Mobile phone number",
+    "submit": "Sign up",
+    "successHeading": "You're on the list",
+    "successSms": "Check your phone and reply Y to confirm text alerts.",
+    "successEmail": "Watch your inbox for our next drop.",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "invalid_phone": "Enter a valid mobile phone number.",
+      "missing_contact": "Enter your email or mobile phone number.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "social": {
+    "heading": "Follow along",
+    "subheading": "New drops and behind-the-scenes, first.",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "facebook": "Facebook"
   }
 }
