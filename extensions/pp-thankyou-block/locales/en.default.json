@@ -1,3 +1,9 @@
 {
-  "heading": "Stay in the loop"
+  "heading": "Stay in the loop",
+  "subheading": {
+    "none": "Get exclusive offers and new drops by email and text.",
+    "email_only": "Get text alerts for new drops and offers.",
+    "sms_only": "Get our emails for new drops and offers.",
+    "both": "Follow us for new drops and behind-the-scenes."
+  }
 }
