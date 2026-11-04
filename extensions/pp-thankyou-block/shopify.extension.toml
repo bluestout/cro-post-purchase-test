@@ -1,0 +1,17 @@
+# https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration
+api_version = "2026-10"
+
+[[extensions]]
+name = "Post-purchase signup / social"
+handle = "pp-thankyou-block"
+type = "ui_extension"
+uid = "f042cbed-58f0-2450-35fc-7267d3fd6bd18795dfde"
+
+# Block target: the merchant places it below the Fairing block in the checkout editor.
+[[extensions.targeting]]
+module = "./src/ThankYou.tsx"
+target = "purchase.thank-you.block.render"
+
+[extensions.capabilities]
+# fetch() to the app backend (subscriber status, Attentive signup, click tracking)
+network_access = true
