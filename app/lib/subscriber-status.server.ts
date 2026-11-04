@@ -1,4 +1,4 @@
-export type SubscriberState = "none" | "email_only" | "sms_only" | "both";
+type SubscriberState = "none" | "email_only" | "sms_only" | "both";
 
 export function toSubscriberState({
   email,

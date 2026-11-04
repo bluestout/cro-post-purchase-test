@@ -1,7 +1,7 @@
 /** Cart attribute written by the Convert experiment; it carries over to the order. */
-export const ARM_ATTRIBUTE_KEY = '_pp_test';
+const ARM_ATTRIBUTE_KEY = '_pp_test';
 
-export type Arm = 'control' | 'variant';
+type Arm = 'control' | 'variant';
 
 /** Returns the order's test arm, or null when the order isn't in the test. */
 export function getArm(
