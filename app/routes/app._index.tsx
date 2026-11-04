@@ -12,10 +12,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Index() {
   return (
     <s-page heading="Post-purchase thank-you test">
-      <s-paragraph>
-        Nothing to configure here. Block settings live in the checkout editor
-        (Thank you page → Post-purchase signup / social).
-      </s-paragraph>
+      <s-banner tone="success" heading="App is configured">
+        No additional setup is needed.
+      </s-banner>
     </s-page>
   );
 }
