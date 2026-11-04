@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate, unauthenticated } from "../shopify.server";
 import { toSubscriberState } from "../lib/subscriber-status.server";
 
@@ -19,6 +19,15 @@ const SUBSCRIBER_STATUS_QUERY = `#graphql
       }
     }
   }`;
+
+/**
+ * React Router sends OPTIONS (the CORS preflight) to the loader, not the
+ * action. The auth helper answers it with 204 + CORS headers.
+ */
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  await authenticate.public.checkout(request);
+  return new Response(null, { status: 405 });
+};
 
 /**
  * POST /api/status — called by the thank-you extension for variant orders.

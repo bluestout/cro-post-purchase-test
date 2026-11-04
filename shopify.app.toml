@@ -2,12 +2,12 @@
 
 client_id = "bc87b3da2b105ca81a3ba565fc84783a"
 name = "Cro Post Purchase Test"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://cro-post-purchase-app-production.up.railway.app"
 embedded = true
 
 [build]
 include_config_on_deploy = true
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false
 
 [access_scopes]
 # read_orders:    backend looks up the thank-you order (customer, email, phone)
@@ -15,7 +15,7 @@ automatically_update_urls_on_dev = true
 scopes = "read_customers,read_orders"
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://cro-post-purchase-app-production.up.railway.app/auth/callback" ]
 
 [webhooks]
 api_version = "2026-10"
