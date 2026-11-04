@@ -1,10 +1,10 @@
 import type { ActionFunctionArgs } from "react-router";
 import { unauthenticated } from "../shopify.server";
 import {
-  ORDER_GID,
   authenticateCheckout,
   checkoutPreflightLoader,
   readJsonBody,
+  toOrderGid,
 } from "../lib/checkout-request.server";
 import { getAttentiveSubscriptions } from "../lib/attentive.server";
 import { toSubscriberState } from "../lib/subscriber-status.server";
@@ -31,16 +31,15 @@ export const loader = checkoutPreflightLoader;
 
 /**
  * POST /api/status — called by the thank-you extension for variant orders.
- * Body: { orderId: "gid://shopify/Order/123" }
+ * Body: { orderId: "gid://shopify/OrderIdentity/123" }
  * A channel counts as subscribed if Shopify consent OR Attentive says so.
  * Returns only the subscriber state, never the customer's email or phone.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { shop, cors } = await authenticateCheckout(request);
 
-  const { orderId } = await readJsonBody(request);
-  if (typeof orderId !== "string" || !ORDER_GID.test(orderId)) {
-    console.warn("api/status rejected orderId", JSON.stringify(orderId)?.slice(0, 100));
+  const orderId = toOrderGid((await readJsonBody(request)).orderId);
+  if (!orderId) {
     return cors(Response.json({ error: "Invalid orderId" }, { status: 400 }));
   }
 

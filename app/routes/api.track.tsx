@@ -1,9 +1,9 @@
 import type { ActionFunctionArgs } from "react-router";
 import {
-  ORDER_GID,
   authenticateCheckout,
   checkoutPreflightLoader,
   readJsonBody,
+  toOrderGid,
 } from "../lib/checkout-request.server";
 import { type EventType, recordEvent } from "../lib/events.server";
 
@@ -19,10 +19,11 @@ export const loader = checkoutPreflightLoader;
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { shop, cors } = await authenticateCheckout(request);
 
-  const { orderId, type, detail } = await readJsonBody(request);
+  const body = await readJsonBody(request);
+  const orderId = toOrderGid(body.orderId);
+  const { type, detail } = body;
   if (
-    typeof orderId !== "string" ||
-    !ORDER_GID.test(orderId) ||
+    !orderId ||
     !TRACKED_TYPES.has(type as EventType) ||
     typeof detail !== "string" ||
     !DETAIL.test(detail)

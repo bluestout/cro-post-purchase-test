@@ -1,9 +1,9 @@
 import type { ActionFunctionArgs } from "react-router";
 import {
-  ORDER_GID,
   authenticateCheckout,
   checkoutPreflightLoader,
   readJsonBody,
+  toOrderGid,
 } from "../lib/checkout-request.server";
 import {
   type Channel,
@@ -28,10 +28,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!isAttentiveConfigured()) return fail("not_configured", 503);
 
   const body = await readJsonBody(request);
-  const { orderId } = body;
-  if (typeof orderId !== "string" || !ORDER_GID.test(orderId)) {
-    return fail("invalid_order", 400);
-  }
+  const orderId = toOrderGid(body.orderId);
+  if (!orderId) return fail("invalid_order", 400);
 
   const rawEmail = typeof body.email === "string" ? body.email.trim() : "";
   const rawPhone = typeof body.phone === "string" ? body.phone.trim() : "";

@@ -1,7 +1,20 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 
-export const ORDER_GID = /^gid:\/\/shopify\/Order\/\d+$/;
+/**
+ * The thank-you page sends `gid://shopify/OrderIdentity/<id>`; the Admin API
+ * order is `gid://shopify/Order/<same id>`. Accepts either and returns the
+ * Admin API GID, or null for anything else.
+ */
+export function toOrderGid(value: unknown): string | null {
+  const match =
+    typeof value === "string" &&
+    /^gid:\/\/shopify\/(?:Order|OrderIdentity)\/(\d+)$/.exec(value);
+  if (match) return `gid://shopify/Order/${match[1]}`;
+
+  console.warn("Rejected orderId", JSON.stringify(value)?.slice(0, 100));
+  return null;
+}
 
 /**
  * Verifies the checkout session token and returns the shop domain plus the
