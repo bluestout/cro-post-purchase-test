@@ -24,7 +24,7 @@ A channel counts as subscribed if Shopify marketing consent (including a checkou
    - `POST /api/status` → `none | email_only | sms_only | both`
    - `POST /api/signup` → Attentive Subscribers API via dedicated sign-up units (double opt-in)
    - `POST /api/track` → impressions and social clicks (`PpEvent` table)
-4. **Admin page** shows unique orders per event and whether the Attentive env vars are set.
+4. **Admin page** has no UI. Its loader must stay: opening the app (Shopify does this right after install) stores the offline token the backend uses.
 
 ## Railway
 
@@ -77,7 +77,15 @@ fetch('/cart/update.js', {method: 'POST', headers: {'Content-Type': 'application
 ## Reporting
 
 - **Signups per arm:** Attentive form-level reporting on the two dedicated sign-up units (primary).
-- **Social clicks / impressions:** admin page (unique orders), variant only.
+- **Social clicks / impressions:** `PpEvent` table, variant only. Run in Railway → Postgres → Data → Query:
+
+  ```sql
+  SELECT "type", "detail", COUNT(DISTINCT "orderId") AS orders
+  FROM "PpEvent"
+  WHERE "shop" = '<store>.myshopify.com'
+  GROUP BY "type", "detail"
+  ORDER BY "type", "detail";
+  ```
 - **Fairing response rate per arm (guardrail):** Fairing export joined on the order's `_pp_test` attribute.
 
 ## Development
