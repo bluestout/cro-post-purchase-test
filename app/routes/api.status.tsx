@@ -40,6 +40,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const { orderId } = await readJsonBody(request);
   if (typeof orderId !== "string" || !ORDER_GID.test(orderId)) {
+    console.warn("api/status rejected orderId", JSON.stringify(orderId)?.slice(0, 100));
     return cors(Response.json({ error: "Invalid orderId" }, { status: 400 }));
   }
 
