@@ -2,51 +2,86 @@ import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { isAttentiveConfigured } from "../lib/attentive.server";
+import { getEventSummary } from "../lib/events.server";
+
+const EVENT_LABELS: Record<string, string> = {
+  impression: "Block shown",
+  signup: "Signed up",
+  social_click: "Social click",
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  const summary = await getEventSummary(session.shop);
 
   return {
-    shop: session.shop,
-    attentiveMode: process.env.ATTENTIVE_API_KEY ? "live" : "mock",
+    attentive: {
+      apiKey: isAttentiveConfigured(),
+      emailSource: Boolean(process.env.ATTENTIVE_EMAIL_SIGN_UP_SOURCE_ID),
+      smsSource: Boolean(process.env.ATTENTIVE_SMS_SIGN_UP_SOURCE_ID),
+    },
+    rows: summary.map(({ type, detail, orders }) => ({
+      key: `${type}:${detail}`,
+      label: `${EVENT_LABELS[type] ?? type} · ${detail}`,
+      orders: Number(orders),
+    })),
   };
 };
 
 export default function Index() {
-  const { shop, attentiveMode } = useLoaderData<typeof loader>();
+  const { attentive, rows } = useLoaderData<typeof loader>();
 
   return (
     <s-page heading="Post-purchase thank-you test">
-      <s-section heading="Status">
+      <s-section heading="Variant activity (unique orders)">
+        {rows.length === 0 ? (
+          <s-paragraph>No activity yet.</s-paragraph>
+        ) : (
+          <s-table>
+            <s-table-header-row>
+              <s-table-header>Event</s-table-header>
+              <s-table-header format="numeric">Orders</s-table-header>
+            </s-table-header-row>
+            <s-table-body>
+              {rows.map((row) => (
+                <s-table-row key={row.key}>
+                  <s-table-cell>{row.label}</s-table-cell>
+                  <s-table-cell>{row.orders}</s-table-cell>
+                </s-table-row>
+              ))}
+            </s-table-body>
+          </s-table>
+        )}
         <s-paragraph>
-          <s-text type="strong">Store: </s-text>
-          <s-text>{shop}</s-text>
-        </s-paragraph>
-        <s-paragraph>
-          <s-text type="strong">Attentive: </s-text>
-          <s-badge tone={attentiveMode === "live" ? "success" : "warning"}>
-            {attentiveMode}
-          </s-badge>
+          Control orders render nothing. Signups per arm come from Attentive
+          form-level reporting; Fairing response rate per arm comes from the
+          Fairing export joined on the order&apos;s _pp_test attribute.
         </s-paragraph>
       </s-section>
-      <s-section heading="How it works">
+
+      <s-section heading="Attentive setup">
         <s-unordered-list>
           <s-list-item>
-            Convert assigns each visitor to an arm and writes the
-            <s-text type="strong"> _pp_test </s-text>
-            cart attribute (control or variant).
+            API key: <ConfigBadge ok={attentive.apiKey} />
           </s-list-item>
           <s-list-item>
-            The thank-you block reads that attribute from the order. Control
-            orders and orders without the attribute see nothing.
+            Email sign-up source ID: <ConfigBadge ok={attentive.emailSource} />
           </s-list-item>
           <s-list-item>
-            Variant orders see an email/SMS signup or a social follow block,
-            based on the customer&apos;s subscription status.
+            SMS sign-up source ID: <ConfigBadge ok={attentive.smsSource} />
           </s-list-item>
         </s-unordered-list>
       </s-section>
     </s-page>
+  );
+}
+
+function ConfigBadge({ ok }: { ok: boolean }) {
+  return (
+    <s-badge tone={ok ? "success" : "warning"}>
+      {ok ? "Set" : "Missing"}
+    </s-badge>
   );
 }
 

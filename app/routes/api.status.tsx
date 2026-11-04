@@ -1,17 +1,24 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { authenticate, unauthenticated } from "../shopify.server";
+import type { ActionFunctionArgs } from "react-router";
+import { unauthenticated } from "../shopify.server";
+import {
+  ORDER_GID,
+  authenticateCheckout,
+  checkoutPreflightLoader,
+  readJsonBody,
+} from "../lib/checkout-request.server";
+import { getAttentiveSubscriptions } from "../lib/attentive.server";
 import { toSubscriberState } from "../lib/subscriber-status.server";
-
-const ORDER_GID = /^gid:\/\/shopify\/Order\/\d+$/;
 
 const SUBSCRIBER_STATUS_QUERY = `#graphql
   query PpSubscriberStatus($id: ID!) {
     order(id: $id) {
       customer {
         defaultEmailAddress {
+          emailAddress
           marketingState
         }
         defaultPhoneNumber {
+          phoneNumber
           smsMarketingConsent {
             state
           }
@@ -20,37 +27,23 @@ const SUBSCRIBER_STATUS_QUERY = `#graphql
     }
   }`;
 
-/**
- * React Router sends OPTIONS (the CORS preflight) to the loader, not the
- * action. The auth helper answers it with 204 + CORS headers.
- */
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.public.checkout(request);
-  return new Response(null, { status: 405 });
-};
+export const loader = checkoutPreflightLoader;
 
 /**
  * POST /api/status — called by the thank-you extension for variant orders.
  * Body: { orderId: "gid://shopify/Order/123" }
+ * A channel counts as subscribed if Shopify consent OR Attentive says so.
  * Returns only the subscriber state, never the customer's email or phone.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  // Verifies the checkout session token; also answers the CORS preflight.
-  const { sessionToken, cors } = await authenticate.public.checkout(request);
+  const { shop, cors } = await authenticateCheckout(request);
 
-  const body = await request.json().catch(() => null);
-  const orderId: unknown = body?.orderId;
+  const { orderId } = await readJsonBody(request);
   if (typeof orderId !== "string" || !ORDER_GID.test(orderId)) {
     return cors(Response.json({ error: "Invalid orderId" }, { status: 400 }));
   }
 
-  const shop = new URL(
-    sessionToken.dest.startsWith("http")
-      ? sessionToken.dest
-      : `https://${sessionToken.dest}`,
-  ).hostname;
   const { admin } = await unauthenticated.admin(shop);
-
   const response = await admin.graphql(SUBSCRIBER_STATUS_QUERY, {
     variables: { id: orderId },
   });
@@ -61,10 +54,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return cors(Response.json({ error: "Order not found" }, { status: 404 }));
   }
 
-  const state = toSubscriberState(
-    order.customer?.defaultEmailAddress?.marketingState,
-    order.customer?.defaultPhoneNumber?.smsMarketingConsent?.state,
-  );
+  const email = order.customer?.defaultEmailAddress;
+  const phone = order.customer?.defaultPhoneNumber;
+  const attentive = await getAttentiveSubscriptions({
+    email: email?.emailAddress,
+    phone: phone?.phoneNumber,
+  });
+
+  const state = toSubscriberState({
+    email: isOptedIn(email?.marketingState) || attentive.email,
+    sms: isOptedIn(phone?.smsMarketingConsent?.state) || attentive.sms,
+  });
 
   return cors(Response.json({ state }));
 };
+
+// PENDING = opted in but awaiting confirmation (e.g. checkout opt-in). The
+// test brief counts anyone who opted in at checkout as subscribed.
+function isOptedIn(state: string | null | undefined) {
+  return state === "SUBSCRIBED" || state === "PENDING";
+}

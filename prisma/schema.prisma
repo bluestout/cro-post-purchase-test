@@ -32,3 +32,18 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+/// Thank-you block activity (variant orders only; control renders nothing).
+/// Reports count distinct orderId per type/detail, so refreshes don't inflate.
+model PpEvent {
+  id        Int      @id @default(autoincrement())
+  shop      String
+  orderId   String
+  /// impression | signup | social_click
+  type      String
+  /// impression: subscriber state; signup: email | sms; social_click: network
+  detail    String
+  createdAt DateTime @default(now())
+
+  @@index([shop, type])
+}
